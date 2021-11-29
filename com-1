@@ -1,0 +1,70 @@
+import pandas as pd
+
+## Unusual Options Activity
+# url = https://www.barchart.com/options/unusual-activity/stocks
+## Unusual Options Volume
+# url = https://www.barchart.com/options/volume-change/stocks?viewName=126010
+## Most Active Options
+# url = https://www.barchart.com/options/most-active/stocks?viewName=126010
+
+df = pd.read_csv('unusual-stock-options-activity-11-27-2021.csv')
+df.index += 1
+df.dropna(inplace=True)
+df.rename(columns={
+    'Exp Date': 'Expiration',
+    'Midpoint': 'Mid',
+    'Open Int': 'OI',
+    'Time': 'Date'}, inplace=True)
+
+## Clean and Create Necessary Columns
+df['Cash Value'] = (df['Volume'] * df['Last'] * 100).astype(int)
+df['Price'] = df['Price'].astype(float)
+df['Strike'] = df['Strike'].astype(float)
+df['Volume'] = df['Volume'].astype(int)
+df['OI'] = df['OI'].astype(int)
+
+## Available Filters
+vol10k_fltr = (df['Volume'] > 10000)
+oi2k_fltr = (df['OI'] < 2500)
+price_fltr = (df['Last'] < 2.5)
+dte_fltr = (df['DTE'] > 3.0) ## Filter by Days to Expiration
+delta_fltr = (df['Delta'] > 0.30) ## Filter by Delta
+call_fltr = (df['Price'] < df['Strike']) & (df['Type'] == 'Call') ## Filter for Calls
+put_fltr = (df['Price'] > df['Strike']) & (df['Type'] == 'Put') ## Filter for Puts
+
+## Largest Size
+val_1m = (df[df['Cash Value'] > 1000000])
+val_5m = (df[df['Cash Value'] > 5000000])
+val_10m = (df[df['Cash Value'] > 10000000])
+val_25m = (df[df['Cash Value'] > 25000000])
+
+val_1m_df = val_1m[['Symbol',
+                  'Type',
+                  'Price',
+                  'Strike',
+                  'Volume',
+                  'OI',
+                  'Cash Value',
+                  'Expiration']]
+
+val_5m_df = val_5m[['Symbol',
+                  'Type',
+                  'Price',
+                  'Strike',
+                  'Volume',
+                  'OI',
+                  'Cash Value',
+                  'Expiration']]
+
+# print(val_1m_df[call_fltr].sort_values(by='Symbol'))
+big_calls_1 = val_1m_df[call_fltr]
+big_calls_1.set_index('Symbol', inplace=True)
+big_calls_1.sort_index(inplace=True)
+big_calls_1.to_csv('big_calls_1.csv')
+print(big_calls_1)
+
+big_puts_1 = val_1m_df[put_fltr]
+big_puts_1.set_index('Symbol', inplace=True)
+big_puts_1.sort_index(inplace=True)
+big_puts_1.to_csv('big_puts_1.csv')
+print(big_puts_1)

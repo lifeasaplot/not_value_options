@@ -31,6 +31,7 @@ dte_fltr = (df['DTE'] > 3.0) ## Filter by Days to Expiration
 delta_fltr = (df['Delta'] > 0.30) ## Filter by Delta
 call_fltr = (df['Price'] < df['Strike']) & (df['Type'] == 'Call') ## Filter for Calls
 put_fltr = (df['Price'] > df['Strike']) & (df['Type'] == 'Put') ## Filter for Puts
+last_fltr = (df['Last'] < 5.00)
 
 ## Largest Size
 val_1m = (df[df['Cash Value'] > 1000000])
@@ -40,6 +41,7 @@ val_25m = (df[df['Cash Value'] > 25000000])
 
 val_1m_df = val_1m[['Symbol',
                   'Type',
+                  'Last',
                   'Price',
                   'Strike',
                   'Volume',
@@ -49,6 +51,7 @@ val_1m_df = val_1m[['Symbol',
 
 val_5m_df = val_5m[['Symbol',
                   'Type',
+                  'Last',
                   'Price',
                   'Strike',
                   'Volume',
@@ -57,13 +60,13 @@ val_5m_df = val_5m[['Symbol',
                   'Expiration']]
 
 # print(val_1m_df[call_fltr].sort_values(by='Symbol'))
-big_calls_1 = val_1m_df[call_fltr]
+big_calls_1 = val_1m_df[call_fltr & last_fltr]
 big_calls_1.set_index('Symbol', inplace=True)
 big_calls_1.sort_index(inplace=True)
 big_calls_1.to_csv('big_calls_1.csv')
 print(big_calls_1)
 
-big_puts_1 = val_1m_df[put_fltr]
+big_puts_1 = val_1m_df[put_fltr & last_fltr]
 big_puts_1.set_index('Symbol', inplace=True)
 big_puts_1.sort_index(inplace=True)
 big_puts_1.to_csv('big_puts_1.csv')
